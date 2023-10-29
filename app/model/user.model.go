@@ -26,18 +26,25 @@ type User struct {
 	Email       string      `json:"email" gorm:"type:varchar;not null;unique"`
 	UserImage   string      `json:"user_image" gorm:"type:varchar"`
 	Session     null.String `json:"-" gorm:"type:varchar"`
-	PassCode    string      `json:"-" gorm:"type:varchar"`
+
+	PassCode    string `json:"-" gorm:"type:varchar"`
+	TransferPin string `json:"-" gorm:"type:varchar"`
 
 	Role string `json:"role" gorm:"type:varchar; check:role IN ('admin', 'mod', 'user'); not null; default:user"`
 
-	UserDetail *UserDetail `json:"user_detail" gorm:"foreignKey:UserID;references:ID"`
-	Wallet     *Wallet     `json:"wallet" gorm:"foreignKey:UserID;references:ID"`
+	UserDetail *UserDetail `json:"user_detail,omitempty" gorm:"foreignKey:UserID;references:ID"`
+	Wallet     *Wallet     `json:"wallet,omitempty" gorm:"foreignKey:UserID;references:ID"`
 
 	Suspended bool `json:"suspended" gorm:"type:bool;default:false"`
 
 	CreatedAt time.Time    `json:"created_at"`
 	UpdatedAt time.Time    `json:"updated_at"`
 	DeletedAt sql.NullTime `json:"-" gorm:"index"`
+}
+
+type LimitedUser struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 }
 
 type UserDetail struct {

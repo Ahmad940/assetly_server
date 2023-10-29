@@ -26,6 +26,7 @@ func GenerateToken(user model.User) (string, error) {
 		"id":      user.ID,
 		"session": user.Session.String,
 		"age":     time.Now().Unix(),
+		"exp":     time.Now().Add(time.Minute * time.Duration(config.GetEnv().JWT_DURATION)).Unix(),
 	}
 
 	// Create token

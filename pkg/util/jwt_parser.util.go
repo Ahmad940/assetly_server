@@ -18,6 +18,7 @@ type TokenMetadata struct {
 	ID      string  `json:"id"`
 	Age     float64 `json:"age"`
 	Session string  `json:"session"`
+	Exp     int64   `json:"exp"`
 }
 
 // ExtractTokenMetadata func to extract metadata from JWT.
@@ -34,6 +35,7 @@ func ExtractTokenMetadata(c *fiber.Ctx) (*TokenMetadata, error) {
 		id := claims["id"].(string)
 		age := claims["age"].(float64)
 		session := claims["session"].(string)
+		expires := int64(claims["exp"].(int64))
 
 		// validating user
 		var user model.User
@@ -55,6 +57,7 @@ func ExtractTokenMetadata(c *fiber.Ctx) (*TokenMetadata, error) {
 			ID:      id,
 			Session: session,
 			Age:     age,
+			Exp:     expires,
 		}, nil
 	}
 

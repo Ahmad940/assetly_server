@@ -27,6 +27,8 @@ func AttachRoutes(app *fiber.App) {
 	router.Authentication(api)
 	router.User(api)
 	router.OTP(api)
+	router.Wallet(api)
+	router.TransactionHistory(api)
 
 	// not found
 	middleware.NotFoundMiddleware(app)

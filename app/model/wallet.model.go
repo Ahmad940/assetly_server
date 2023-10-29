@@ -12,23 +12,27 @@ type Wallet struct {
 	Balance  float64 `json:"balance" gorm:"type:numeric(10,2);default:0"`
 	UserID   string  `json:"user_id" gorm:"type:varchar;index"`
 
+	User               *User               `json:"user,omitempty"`
+	TransactionHistory *TransactionHistory `json:"transaction_history,omitempty"  gorm:"foreignKey:WalletNo;references:WalletNo"`
+
 	CreatedAt time.Time    `json:"created_at"`
 	UpdatedAt time.Time    `json:"updated_at"`
 	DeletedAt sql.NullTime `json:"-" gorm:"index"`
 }
 
-type TransactionHistory struct {
-	ID string `json:"id" gorm:"primaryKey; type:varchar; not null; unique"`
+type TopUp struct {
+	WalletNo string  `json:"wallet_no" validate:"required"`
+	Amount   float64 `json:"amount" validate:"required,min=1"`
+}
 
-	Amount              float64 `json:"amount" gorm:"type:numeric(10,2);default:0;index"`
-	Narration           string  `json:"narration" gorm:"type:varchar"`
-	TransactionType     string  `json:"transaction_type" gorm:"type:varchar;check:role IN ('credit', 'debit');index"`
-	TransactionStatus   string  `json:"transaction_status" gorm:"type:varchar;check:role IN ('success', 'pending', 'failed', 'reversed');index"`
-	TransactionCategory string  `json:"transaction_category" gorm:"type:varchar;check:role IN ('top up', 'withdraw', 'transfer', 'airtime', 'data', 'reversal');index"`
+type Transfer struct {
+	RecipientAccountNo string  `json:"wallet_no" validate:"required"`
+	Amount             float64 `json:"amount" validate:"required,min=1"`
+	Narration          string  `json:"narration"`
+	TransferPin        string  `json:"transfer_pin" validate:"required"`
+}
 
-	RecipientName      string `json:"recipient_name" gorm:"type:varchar"`
-	RecipientBank      string `json:"recipient_bank" gorm:"type:varchar"`
-	RecipientAccountNo string `json:"recipient_account_no" gorm:"type:varchar"`
-
-	CreatedAt time.Time `json:"created_at"`
+type Withdraw struct {
+	Amount      float64 `json:"amount" validate:"required,min=1"`
+	TransferPin string  `json:"transfer_pin" validate:"required"`
 }
