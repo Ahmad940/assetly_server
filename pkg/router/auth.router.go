@@ -10,6 +10,5 @@ func Authentication(app fiber.Router) {
 
 	auth.Get("/profile", handler.Profile)
 	auth.Post("/login", handler.Login)
-	auth.Post("/get-token", handler.GetToken)
 	auth.Post("/register", handler.Register)
 }

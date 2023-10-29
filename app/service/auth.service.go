@@ -4,20 +4,18 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/Ahmad940/assetly_server/app/model"
-	"github.com/Ahmad940/assetly_server/pkg/constant"
 	"github.com/Ahmad940/assetly_server/pkg/util"
-	"github.com/Ahmad940/assetly_server/platform/cache"
 	"github.com/Ahmad940/assetly_server/platform/db"
-	"github.com/Ahmad940/assetly_server/platform/sms"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 	"gorm.io/gorm"
 )
 
+var invalidCred = "invalid email or password"
+
 // Login
-func Login(param model.Login) error {
+func Login(param model.Login) (model.AuthResponse, error) {
 	var user model.User
 
 	err := db.DB.Where("country_code = ? and phone_number = ?", param.CountryCode, param.PhoneNumber).First(&user).Error
@@ -25,76 +23,22 @@ func Login(param model.Login) error {
 		// if user not found
 		if SqlErrorNotFound(err) {
 
-			return fmt.Errorf("phone number not registered")
+			return model.AuthResponse{}, fmt.Errorf("phone number not registered")
 		} else {
 			fmt.Println("Error fetching credentials, reason:", err)
-			return err
-		}
-	}
-
-	go (func() {
-		// generate OTP
-		otp, err := util.GenerateRandomNumber(4)
-		if err != nil {
-			log.Println("Error generating otp, reason:", err)
-			return
-		}
-
-		message := fmt.Sprintf("Your Health360 one time password is %v", otp)
-		phoneNumber := fmt.Sprintf("%v%v", param.CountryCode, param.PhoneNumber)
-
-		// send the top
-		err = sms.SendSms(phoneNumber, message)
-		if err != nil {
-			log.Println("Unable to send sms, reason:", err)
-			return
-		}
-
-		// generateToken
-		token, err := util.GenerateToken(user.ID)
-		if err != nil {
-			log.Println("Error occurred while generating token:", err)
-			return
-		}
-
-		// cache the otp
-		key := fmt.Sprintf("%v:%v", phoneNumber, otp)
-		defaultKey := fmt.Sprintf("%v:1234", phoneNumber)
-		_ = cache.SetRedisValue(defaultKey, token, time.Minute*5)
-		err = cache.SetRedisValue(key, token, time.Minute*5)
-		if err != nil {
-			log.Println("Unable to cache otp, reason:", err)
-			return
-		}
-	})()
-
-	return nil
-}
-
-func GetToken(param model.RequestToken) (model.AuthResponse, error) {
-	phoneNumber := fmt.Sprintf("%v%v", param.CountryCode, param.PhoneNumber)
-	key := fmt.Sprintf("%v:%v", phoneNumber, param.OTP)
-
-	// retrieve the value
-	token, err := cache.GetRedisValue(key)
-	if err != nil {
-		if err.Error() == constant.RedisNotFoundText {
-			return model.AuthResponse{}, errors.New("invalid or expired OTP")
-		}
-		log.Println("Error occurred while generating token:", err)
-		return model.AuthResponse{}, err
-	}
-
-	user := model.User{}
-	err = db.DB.Preload("UserDetail").Preload("Wallet").Where("country_code = ? and phone_number = ?", param.CountryCode, param.PhoneNumber).First(&user).Error
-	if err != nil {
-		if SqlErrorNotFound(err) {
-			log.Println("Login - user not found: ", err)
-			return model.AuthResponse{}, errors.New("user not found")
-		} else {
-			log.Println("Login - error while retrieving user: ", err)
 			return model.AuthResponse{}, err
 		}
+	}
+
+	if passwordMatched := util.CompareHashedPassword(param.PassCode, user.PassCode); !passwordMatched {
+		return model.AuthResponse{}, errors.New(invalidCred)
+	}
+
+	// generateToken
+	token, err := util.GenerateToken(user)
+	if err != nil {
+		log.Println("Error occurred while generating token:", err)
+		return model.AuthResponse{}, err
 	}
 
 	return model.AuthResponse{
@@ -166,7 +110,7 @@ func CreateAccount(param model.CreateUser) (model.AuthResponse, error) {
 	}
 
 	// generateToken
-	token, err := util.GenerateToken(user.ID)
+	token, err := util.GenerateToken(user)
 	if err != nil {
 		log.Println("Error occurred while generating token:", err)
 		return model.AuthResponse{}, err

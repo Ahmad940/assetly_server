@@ -49,6 +49,38 @@ func UpdateUser(ctx *fiber.Ctx) error {
 	return ctx.JSON(user)
 }
 
+func UpdateUserPassCode(ctx *fiber.Ctx) error {
+	// retrieving token meta data
+	tokenData, err := util.ExtractTokenMetadata(ctx)
+
+	if err != nil {
+		return service.ErrorResponse(err, ctx)
+	}
+
+	var body model.UpdateUserPassCode
+	// parsing response body
+	err = ctx.BodyParser(&body)
+	if err != nil {
+		return service.ErrorResponse(err, ctx)
+	}
+
+	// validating the user
+	errors := util.ValidateStruct(body)
+	if len(errors) != 0 {
+		return ctx.Status(fiber.StatusBadRequest).JSON(errors)
+	}
+
+	// Admin update users admin
+	err = service.UpdateUserPassCode(tokenData.ID, body)
+	if err != nil {
+		return service.ErrorResponse(err, ctx)
+	}
+
+	return ctx.JSON(fiber.Map{
+		"message": "pass code updated successfully",
+	})
+}
+
 func UpdateUserAdmin(ctx *fiber.Ctx) error {
 	var body model.UpdateUserAdmin
 	// parsing response body

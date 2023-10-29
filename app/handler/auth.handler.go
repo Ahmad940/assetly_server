@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"fmt"
-
 	"github.com/Ahmad940/assetly_server/app/model"
 	"github.com/Ahmad940/assetly_server/app/service"
 	"github.com/Ahmad940/assetly_server/pkg/util"
@@ -42,32 +40,7 @@ func Login(ctx *fiber.Ctx) error {
 	}
 
 	// Requesting OTP
-	err = service.Login(body)
-	if err != nil {
-		return service.ErrorResponse(err, ctx)
-	}
-	return ctx.JSON(fiber.Map{
-		"message": fmt.Sprintf("OTP has been sent to %v%v successfully", body.CountryCode, body.PhoneNumber),
-	})
-}
-
-func GetToken(ctx *fiber.Ctx) error {
-	var body model.RequestToken
-
-	// parsing response body
-	err := ctx.BodyParser(&body)
-	if err != nil {
-		return service.ErrorResponse(err, ctx)
-	}
-
-	// validating the data
-	errors := util.ValidateStruct(body)
-	if len(errors) != 0 {
-		return ctx.Status(fiber.StatusBadRequest).JSON(errors)
-	}
-
-	// retrieving the token by passing request body
-	response, err := service.GetToken(body)
+	response, err := service.Login(body)
 	if err != nil {
 		return service.ErrorResponse(err, ctx)
 	}

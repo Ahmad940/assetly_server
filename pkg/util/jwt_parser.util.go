@@ -2,6 +2,7 @@ package util
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 
@@ -14,8 +15,9 @@ import (
 
 // TokenMetadata struct to describe metadata in JWT.
 type TokenMetadata struct {
-	ID  string  `json:"id"`
-	Age float64 `json:"age"`
+	ID      string  `json:"id"`
+	Age     float64 `json:"age"`
+	Session string  `json:"session"`
 }
 
 // ExtractTokenMetadata func to extract metadata from JWT.
@@ -31,6 +33,7 @@ func ExtractTokenMetadata(c *fiber.Ctx) (*TokenMetadata, error) {
 		// Expires time.
 		id := claims["id"].(string)
 		age := claims["age"].(float64)
+		session := claims["session"].(string)
 
 		// validating user
 		var user model.User
@@ -44,9 +47,14 @@ func ExtractTokenMetadata(c *fiber.Ctx) (*TokenMetadata, error) {
 			}
 		}
 
+		if user.Session.String != session {
+			return nil, fmt.Errorf("invalid or expired session")
+		}
+
 		return &TokenMetadata{
-			ID:  id,
-			Age: age,
+			ID:      id,
+			Session: session,
+			Age:     age,
 		}, nil
 	}
 

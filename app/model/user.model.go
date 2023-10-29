@@ -26,11 +26,14 @@ type User struct {
 	Email       string      `json:"email" gorm:"type:varchar;not null;unique"`
 	UserImage   string      `json:"user_image" gorm:"type:varchar"`
 	Session     null.String `json:"-" gorm:"type:varchar"`
+	PassCode    string      `json:"-" gorm:"type:varchar"`
 
 	Role string `json:"role" gorm:"type:varchar; check:role IN ('admin', 'mod', 'user'); not null; default:user"`
 
 	UserDetail *UserDetail `json:"user_detail" gorm:"foreignKey:UserID;references:ID"`
 	Wallet     *Wallet     `json:"wallet" gorm:"foreignKey:UserID;references:ID"`
+
+	Suspended bool `json:"suspended" gorm:"type:bool;default:false"`
 
 	CreatedAt time.Time    `json:"created_at"`
 	UpdatedAt time.Time    `json:"updated_at"`
@@ -81,5 +84,13 @@ type UpdateUserAdmin struct {
 	Country     string `json:"country"`
 	CountryCode string `json:"country_code"`
 	PhoneNumber string `json:"phone_number"`
-	Role        string `json:"role" gorm:"type:varchar; check:role IN ('admin', 'user'); not null; default:user"`
+	Role        string `json:"role"`
+	Suspended   bool   `json:"suspended"`
+}
+
+type UpdateUserPassCode struct {
+	// ID string `json:"id" validate:"required"`
+
+	CurrentPassCode string `json:"current_pass_code"`
+	NewPassCode     string `json:"new_pass_code"  validate:"len=6,required"`
 }

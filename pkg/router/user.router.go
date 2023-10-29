@@ -12,7 +12,8 @@ func User(app fiber.Router) {
 	auth.Get("/:id", handler.GetAUser)
 	auth.Get("/", handler.GetAllUsers)
 	auth.Patch("/", handler.UpdateUser)
-	auth.Patch("/admin/update", middleware.JWTProtected(), middleware.RoleAuthorization(middleware.RoleConfig{
+	auth.Patch("/pass-code", middleware.JWTProtected(), handler.UpdateUserPassCode)
+	auth.Patch("/admin", middleware.JWTProtected(), middleware.RoleAuthorization(middleware.RoleConfig{
 		Roles: []string{"admin"},
 	}), handler.UpdateUserAdmin)
 }
